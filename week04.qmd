@@ -56,6 +56,8 @@ str(x)
 
 *Write your thoughts here:*
 
+The : operator creates integers `c()` combines values into a vector `typeof()` shows internal storage, `class()` shows object class
+
 #### Atomic Vectors - Integers
 
 ```{r atomic-vectors-integers, eval=FALSE}
@@ -84,6 +86,9 @@ str(x)
 -   What does the `L` suffix do?
 
 *Write your thoughts here:*
+
+The L suffix makes it into an integer.
+Mixing types results in coercion to the most flexible type as.integer() explicitly converts to integer type.
 
 #### Atomic Vectors - Characters
 
@@ -129,6 +134,10 @@ glue::glue("This unit is great.
 
 *Write your analysis here:*
 
+In R, paste() and cat() are both used for string concatenation, but they differ in how they handle the output.
+paste() creates a character string, which can be stored in a variable, while cat() displays the concatenated string directly to the console and doesn't return a value.
+The glue() function, from the glue package, provides a more convenient way to embed variables within strings using `{}` placeholders.
+
 #### Atomic Vectors - Logicals
 
 ```{r atomic-vectors-logicals, eval=FALSE, error=TRUE}
@@ -169,6 +178,10 @@ str(x)
 
 *Write your explanation here:*
 
+The expression 1 \<- 1 in R will cause an error because 1 is a numeric literal and cannot be assigned a value.
+
+Use == for equality, \<- for assignment.
+
 #### Factors
 
 ```{r factors, eval=FALSE}
@@ -195,6 +208,8 @@ as.character(x)
 
 *Write your thoughts here:*
 
+Factors represent categorical data Stored as integers with labels (levels) Useful for statistical analysis and plotting `table()` counts occurrences of each level.
+
 ### Working with Matrices and Arrays
 
 #### Matrices
@@ -217,6 +232,10 @@ m
 -   How does R fill matrices by default?
 
 *Write your answer here:*
+
+Matrices are 2-dimensional arrays.
+The first matrix fills the numbers in by columns and the second fills them in by row.
+R fills in by columns as its default.
 
 #### Arrays
 
@@ -250,6 +269,12 @@ x
 
 *Write your explanation here:*
 
+Arrays can have multiple dimensions.
+R recycles values if not enough provided.
+3D arrays useful for time series or panel data
+
+-   All elements must be same type
+
 ### Working with Lists
 
 ```{r lists, eval=FALSE}
@@ -275,6 +300,11 @@ x
 -   What are the advantages of named lists?
 
 *Write your analysis here:*
+
+Lists can contain different data types.
+Use names for easier access.
+Lists can be nested (lists within lists).
+Essential for storing complex data structures
 
 ### Working with Data Frames and Tibbles
 
@@ -324,6 +354,11 @@ x
 
 *Write your thoughts here:*
 
+Data frames are special lists with equal-length columns.
+Tibbles are modern data frames with better behaviour.
+`tribble()` allows row-wise input for readability.
+`glimpse()` shows compact data structure
+
 ## Loading and Saving Data
 
 Download the `test.csv` file from iLearn and place it in a `data` subfolder within your working directory.
@@ -354,6 +389,11 @@ waldo::compare(x, x_delim)
 
 *Write your observations here:*
 
+`read_csv()` is specialised for CSV files.
+`read_delim()` is more general with specified delimiter.
+Both create tibbles by default.
+Use `help('read_csv')` to explore options
+
 ### Writing Data
 
 ```{r writing-data, eval=FALSE}
@@ -383,6 +423,11 @@ waldo::compare(weather_data, weather_check)
 -   Why is it good practice to read the data back after saving?
 
 *Write your thoughts here:*
+
+`write_csv()` saves tibbles to CSV format.
+Always verify your data after saving/loading.
+Check the file with Excel or text editor.
+Other packages: `readxl` for Excel, `haven` for SPSS/Stata
 
 ### Selecting and Modifying Values
 
@@ -787,6 +832,7 @@ cholesterol_data
 # Your tasks:
 # 1. Convert to long format
 # 2. Calculate n, mean, and standard deviation for each diet group
+
 ```
 
 ```{r cholesterol-solution-student, eval=FALSE}
@@ -795,12 +841,19 @@ cholesterol_data_longer <-  cholesterol_data |>
   pivot_longer(
   cols = c('oat_bran_free', 'oat_bran'),
   names_to = "diet",
-  values_to = "cholestrol"
+  values_to = "cholesterol"
 )
 cholesterol_data_longer
 
 # Task 2 - Calculate summary statistics:
-
+cholesterol_data_longer |> 
+  group_by(diet) |> 
+  summarise(
+    n = n(),                       # Sample size
+    mean = mean(cholesterol),      # Average cholesterol
+    sd = sd(cholesterol),          # Standard deviation
+    .groups = "drop" # experimental feature, similar to ungroup()
+  )
 
 ```
 
@@ -815,7 +868,7 @@ Sketch out the process to calculate the `rate` for `table2` and `table3`.
 You need to:
 
 a.  Extract TB cases per country per year
-b.  Extract matching population per country per year\
+b.  Extract matching population per country per year
 c.  Divide cases by population, multiply by 10000
 d.  Store back in appropriate place
 
@@ -823,11 +876,25 @@ d.  Store back in appropriate place
 
 ```{r calculate-rates-student, eval=FALSE}
 # Your approach for table2:
-
+table2 |>
+  pivot_wider(
+    names_from = type,        # cases and population become columns
+    values_from = count       # count values fill the columns
+  ) |> 
+  mutate(rate = cases / population * 10000)  # Calculate rate per 10,000
 
 # Your approach for table3:
-
-
+table3 |>
+  separate_wider_delim(
+    cols = rate,              # Column to separate
+    delim = "/",              # Split on forward slash
+    names = c("cases", "population")  # New column names
+  ) |> 
+  mutate(
+    cases = as.numeric(cases),         # Convert to numeric
+    population = as.numeric(population),
+    rate = cases / population * 10000  # Calculate proper rate
+  )
 ```
 
 **Your explanation:** - What's the main challenge with each table format?
